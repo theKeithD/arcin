@@ -120,6 +120,8 @@ class WS2812B {
 		}
 		
 		void update(uint8_t r, uint8_t g, uint8_t b) {
+			if(busy) { return; }
+
 			set_color(r, g, b);
 			
 			cnt = 15;
@@ -295,12 +297,18 @@ class AnalogAxis : public Axis {
 			Time::sleep(2);
 			
 			// Calibrate ADC.
-			// TODO
-			
+			// ADEN = 0
+			adc.CR |= 0 << 30; // ADCALDIF
+			adc.CR |= 1 << 31; // ADCAL
+			while(!(adc.CR & (1 << 31))); // wait until ADCAL = 0
+			// ADC_CALFACT set?
+
 			// Configure continous capture on one channel.
 			adc.CFGR = (1 << 13) | (1 << 12) | (1 << 5); // CONT, OVRMOD, ALIGN
 			adc.SQR1 = (ch << 6);
-			adc.SMPR1 = (7 << (ch * 3)); // 72 MHz / 64 / 614 = apx. 1.8 kHz
+			
+			// RIP sampling rate change, back to defaults
+			//adc.SMPR1 = (7 << (ch * 3)); // 72 MHz / 64 / 614 = apx. 1.8 kHz
 			
 			// Enable ADC.
 			adc.CR |= 1 << 0; // ADEN
@@ -323,7 +331,10 @@ int main() {
 	rcc_init();
 	
 	// Set ADC12PRES to /64.
-	RCC.CFGR2 |= (0x19 << 4);
+	//RCC.CFGR2 |= (0x19 << 4);
+
+	// Set ADC12PRES to /1.
+	RCC.CFGR2 |= (0x10 << 4);
 	
 	// Initialize system timer.
 	STK.LOAD = 72000000 / 8 / 1000; // 1000 Hz.
@@ -465,6 +476,18 @@ int main() {
 				last_y = qe2_count;
 			}
 			
+			/* SVRE9 smoothing hack: ignore deltas of 1 */
+			if(rx == 1) {
+				qe1_count -= 1;
+			} else if(rx == -1) {
+				qe1_count += 1;
+			}
+			if(ry == 1) {
+				qe2_count -= 1;
+			} else if(ry == -1) {
+				qe2_count += 1;
+			}
+
 			if(state_x > 0) {
 				buttons |= 1 << 11;
 			} else if(state_x < 0) {
