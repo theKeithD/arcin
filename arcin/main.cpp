@@ -476,16 +476,12 @@ int main() {
 				last_y = qe2_count;
 			}
 			
-			/* SVRE9 smoothing hack: ignore deltas of 1 */
-			if(rx == 1) {
-				qe1_count -= 1;
-			} else if(rx == -1) {
-				qe1_count += 1;
+			/* SVRE9 smoothing hack: ignore deltas of 1 or 2 */
+			if(rx >= -2 && rx <= 2 && rx != 0) {
+				qe1_count -= rx;
 			}
-			if(ry == 1) {
-				qe2_count -= 1;
-			} else if(ry == -1) {
-				qe2_count += 1;
+			if(ry >= -2 && ry <= 2 && ry != 0) {
+				qe2_count -= ry;
 			}
 
 			if(state_x > 0) {
