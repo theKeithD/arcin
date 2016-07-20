@@ -1,0 +1,11 @@
+SWDIO  = dao 72 (dao J5)
+SWCLK  = dao 76 (dao J4)
+JNRST  = dao 90 (dao J1)
+JTDO   = dao 89 (dao J2)
+JTDI   = dao 77 (dao J3)
+
+VDD_T  = Nucleo 1 (unused)
+SWCLK  = Nucleo 2
+GND    = Nucleo 3 (external GND)
+SWDIO  = Nucleo 4
+NRST   = Nucleo 5

@@ -1,0 +1,19 @@
+openocd -f interface/flyswatter.cfg -f board/stm32100b_eval.cfg \
+        -c init -c targets -c "halt" \
+        -c "flash write_image erase fancyblink.elf" \
+        -c "verify_image firmware.elf" \
+        -c "reset run" -c shutdown
+
+
+
+openocd -f interface/openocd-usb.cfg -f board/olimex_stm32_h103.cfg \
+        -c init -c targets -c "halt" -c "flash write_image erase fancyblink.elf" \
+        -c "verify_image fancyblink.elf" \
+        -c "reset run" -c shutdown
+
+
+openocd -f interface/openocd-usb.cfg -f board/stm32100b_eval.cfg \
+        -c init -c targets -c "halt" \
+        -c "flash write_image erase firmware.elf" \
+        -c "verify_image firmware.elf" \
+        -c "reset run" -c shutdown

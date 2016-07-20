@@ -146,7 +146,7 @@ struct report_t {
 	uint64_t buttons;
 } __attribute__((packed));
 
-enum io_t : uint8_t {A, B, C, D, E};
+enum io_t : uint8_t {A, B, C, D, E, Z};
 
 struct mapping_t {
 	io_t io;
@@ -165,15 +165,15 @@ const mapping_t map[][4] {
 		{C, 2},
 		{C, 0},
 	}, {
-		{A, 0},
-		{A, 2},
-		{A, 1},
-		{A, 3},
+		{Z, 0}, // originally {A, 0} but PA0 = BAD
+		{A, 2}, // {A, 2},
+		{A, 1}, // {A, 1},
+		{A, 3}, // {A, 3},
 	}, {
-		{A, 7},
-		{A, 5},
-		{A, 6},
-		{A, 4},
+		{A, 7}, // {A, 7},
+		{A, 5}, // {A, 5},
+		{Z, 0}, // originally {A, 6} but PA6 = BAD
+		{Z, 0}, // originally {A, 4} but PA4 = BAD
 	}, {
 		{B, 0},
 		{C, 5},
@@ -276,6 +276,9 @@ int main() {
 	for(uint32_t i = 0; i < 16; i++) {
 		for(uint32_t j = 0; j < 4; j++) {
 			auto& m = map[i][j];
+
+			// ignore GPIOZ (not real, only used to mark bad pins)
+			if(m.io == Z) { continue; }
 			
 			(*gpios[m.io])[m.n].set_mode(Pin::InputPull);
 			(*gpios[m.io])[m.n].on();
@@ -299,6 +302,9 @@ int main() {
 			for(uint32_t j = 0; j < 4; j++) {
 				auto& m = map[i][j];
 			
+			// ignore GPIOZ (not real, only used to mark bad pins)
+			if(m.io == Z) { continue; }
+
 				buttons |= bit(inputs[m.io], m.n) << i;
 			}
 		}
