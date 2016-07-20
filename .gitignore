@@ -1,5 +1,5 @@
 *.o
 *.a
-*.elf
 *.swp
+*.pyc
 .sconsign.dblite
