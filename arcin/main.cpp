@@ -448,11 +448,11 @@ int main() {
 			int8_t rx = qe1_count - last_x;
 			int8_t ry = qe2_count - last_y;
 			
-			if(rx > 1) {
-				state_x = 100;
+			if(rx > 2) {
+				state_x = 50;
 				last_x = qe1_count;
-			} else if(rx < -1) {
-				state_x = -100;
+			} else if(rx < -2) {
+				state_x = -50;
 				last_x = qe1_count;
 			} else if(state_x > 0) {
 				state_x--;
@@ -462,11 +462,11 @@ int main() {
 				last_x = qe1_count;
 			}
 			
-			if(ry > 1) {
-				state_y = 100;
+			if(ry > 2) {
+				state_y = 50;
 				last_y = qe2_count;
-			} else if(ry < -1) {
-				state_y = -100;
+			} else if(ry < -2) {
+				state_y = -50;
 				last_y = qe2_count;
 			} else if(state_y > 0) {
 				state_y--;
@@ -476,7 +476,7 @@ int main() {
 				last_y = qe2_count;
 			}
 			
-			/* SVRE9 smoothing hack: ignore deltas of 1 or 2 */
+			/* SVRE9 smoothing hack: ignore deltas of 1-2 */
 			if(rx >= -2 && rx <= 2 && rx != 0) {
 				qe1_count -= rx;
 			}
