@@ -9,7 +9,7 @@ The original codebase by zyp is available at: http://cgit.jvnv.net/arcin/log/?h=
 Setup
 -----
 1. Grab the ARM toolchain: https://launchpad.net/gcc-arm-embedded/+download
-2. SCons as its build tool: http://scons.org/pages/download.html
+2. You will need SCons to build the image: http://scons.org/pages/download.html
 3. `git submodule init`: this will pull the external `laks` submodule, which contains headers for the hardware used by the arcin.
 4. Supplementary scripts will require Python (2.7) as well as the hidapi plugin: https://pypi.python.org/pypi/hidapi/0.7.99.post16
 
@@ -31,4 +31,4 @@ Pre-Built Images
 The `bin/` directory in this repository contains already built and packaged firmwares. The `.elf` files can be flashed onto a device using the `hidflash.py` script. Standalone `.exe` files are also provided.
 
 - `arcin-svre9-alpha`: A modification of arcin firmware suited for SVRE9 or SVSE5 controllers, which aims to reduce noise from analog inputs.
-- `arcin-svre9-alpha2`: A later modification of the above firmware, which further reduces noise from analog inputs at the cost of slightly lowered output resolution.
+- `arcin-svre9-alpha2`: A later modification of the above firmware, which further reduces noise from analog inputs at the cost of slightly lowered sensitivity.
