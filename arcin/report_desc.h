@@ -3,13 +3,46 @@
 
 #include <usb/hid.h>
 
-auto report_desc = gamepad(
+auto report_desc = keyboard(
 	// Inputs.
 	report_id(1),
 	
+	usage_page(UsagePage::Keyboard),
+	usage(0x8b),          // B1  - FX-L  (muhen)
+	usage('d' - 'a' + 4), // B2  - BT-A  (D)
+	usage(0x8a),          // B3  - FX-R  (henkan)
+	usage('f' - 'a' + 4), // B4  - BT-B  (F)
+	usage('q' - 'a' + 4), // B5  - undef (Q) 
+	usage('j' - 'a' + 4), // B6  - BT-C  (J)
+	usage('w' - 'a' + 4), // B7  - undef (W)
+	usage('k' - 'a' + 4), // B8  - BT-D  (K)
+	logical_minimum(0),
+	logical_maximum(1),
+	report_count(8),
+	report_size(1),
+	input(0x02),
+
+	padding_in(1),        // B9  - undef (reserved for lights)
+
+	usage_page(UsagePage::Keyboard),
+	usage(0x28),          // B10 - Start (Enter)
+	usage('p' - 'a' + 4), // B11 - undef (P)
+	usage('s' - 'a' + 4), // B12 - VOL-L right (S)
+	usage('a' - 'a' + 4), // B13 - VOL-L left  (A)
+	usage(0x33),          // B14 - VOL-R right (;)
+	usage('l' - 'a' + 4), // B15 - VOL-R left  (L)
+	logical_minimum(0),
+	logical_maximum(1),
+	report_count(6),
+	report_size(1),
+	input(0x02),
+	
+	padding_in(1 + 8 + 8), // 15 + 1 for buttons and remaining space, then 8 + 8 for X/Y (now unused)
+
+	/*
 	buttons(15),
 	padding_in(1),
-	
+
 	usage_page(UsagePage::Desktop),
 	usage(DesktopUsage::X),
 	logical_minimum(0),
@@ -25,6 +58,7 @@ auto report_desc = gamepad(
 	report_count(1),
 	report_size(8),
 	input(0x02),
+	*/
 	
 	// Outputs.
 	report_id(2),
