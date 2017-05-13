@@ -4,6 +4,8 @@ This repository contains firmware code for the arcin v1.1, a custom game control
 
 The `svre9` branch in this repository contains modifications to improve user experience when using this board with DJ Dao SVRE9 or SVSE5 game controllers outfitted with arcade-style encoders.
 
+The `sv3c-kb` branch in this repository is based off of the `svre9` branch, with additional modifications to present the device as a keyboard instead of a game controller. This makes the device compatible with SOUND VOLTEX III e-AMUSEMENT CLOUD Trial 1.1, which only supports keyboard input: http://p.eagate.573.jp/game/eacsdvx/iii/p/common/a_test/atest_top.html
+
 The original codebase by zyp is available at: http://cgit.jvnv.net/arcin/log/?h=conf (the `svre9` branch is based on the current HEAD of the `conf` branch, `1cb55ca06ecbc3666d3bf66a583a768f69bf9278`)
 
 Setup
@@ -11,7 +13,13 @@ Setup
 1. Grab the ARM toolchain: https://launchpad.net/gcc-arm-embedded/+download
 2. You will need SCons to build the image: http://scons.org/pages/download.html
 3. `git submodule init`: this will pull the external `laks` submodule, which contains headers for the hardware used by the arcin.
-4. Supplementary scripts will require Python (2.7) as well as the hidapi plugin: https://pypi.python.org/pypi/hidapi/0.7.99.post16
+4. Supplementary scripts will require Python (2.7) as well as the following Python modules:
+- pyhidapi (https://github.com/NF6X/pyhidapi)
+- pyelftools (https://pypi.python.org/pypi/pyelftools/)
+5. You may also find the following libraries useful (package names taken from Ubuntu's repositories):
+- libhidapi-libusb0
+- libusb-dev
+- lib-usb-1.0-0-dev
 
 Building and Testing
 --------------------
