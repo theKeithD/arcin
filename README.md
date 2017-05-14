@@ -40,3 +40,7 @@ The `bin/` directory in this repository contains already built and packaged firm
 
 - `arcin-svre9-alpha`: A modification of arcin firmware suited for SVRE9 or SVSE5 controllers, which aims to reduce noise from analog inputs.
 - `arcin-svre9-alpha2`: A later modification of the above firmware, which further reduces noise from analog inputs at the cost of slightly lowered sensitivity.
+- `arcin-sdvx-[ac|copal]`: Firmware for use with SVRE9 or SVSE5 controllers using either AC or Copal encoders, presented as a gamepad. WS2812B lighting available via B9. (`arcin-sdvx-ac` is effectively the same as `arcin-svre9-alpha2`)
+- `arcin-sdvx-[ac|copal]-kb`: Same as the above, except presented as a keyboard.
+- `arcin-sdvx-[ac|copal]-nolight`: Same as `arcin-sdvx-[ac|copal]`, except with WS2812B lighting disabled. This means B9 can be used as a button.
+- `arcin-sdvx-[ac|copal]-kb-nolight`: Combination of the two firmwares above. No WS2812B lighting, presented as a keyboard.
