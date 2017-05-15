@@ -13,6 +13,19 @@
 #include "configloader.h"
 #include "config.h"
 
+#ifdef KEYBOARD_MODE
+static const bool keyboard_mode = KEYBOARD_MODE;
+#endif
+#ifdef B9_LIGHTING
+static const bool b9_lighting = B9_LIGHTING;
+#endif
+#ifdef ANALOG_MODE
+static const bool analog_mode = ANALOG_MODE;
+#endif
+#ifdef SMOOTHING_FACTOR
+static const uint8_t smoothing_factor = SMOOTHING_FACTOR;
+#endif
+
 static uint32_t& reset_reason = *(uint32_t*)0x10000000;
 
 static bool do_reset_bootloader;
@@ -61,93 +74,95 @@ static Pin led2 = GPIOA[9];
 
 USB_f1 usb(USB, dev_desc_p, conf_desc_p);
 
-class WS2812B {
-	private:
-		uint8_t dmabuf[25];
-		volatile uint32_t cnt;
-		volatile bool busy;
-		
-		void schedule_dma() {
-			cnt--;
+#if B9_LIGHTING==1
+	class WS2812B {
+		private:
+			uint8_t dmabuf[25];
+			volatile uint32_t cnt;
+			volatile bool busy;
 			
-			DMA1.reg.C[6].NDTR = 25;
-			DMA1.reg.C[6].MAR = (uint32_t)&dmabuf;
-			DMA1.reg.C[6].PAR = (uint32_t)&TIM4.CCR3;
-			DMA1.reg.C[6].CR = (0 << 10) | (1 << 8) | (1 << 7) | (0 << 6) | (1 << 4) | (1 << 1) | (1 << 0);
-		}
-		
-		void set_color(uint8_t r, uint8_t g, uint8_t b) {
-			uint32_t n = 0;
-			
-			for(uint32_t i = 8; i-- > 0; n++) {
-				dmabuf[n] = g & (1 << i) ? 58 : 29;
+			void schedule_dma() {
+				cnt--;
+				
+				DMA1.reg.C[6].NDTR = 25;
+				DMA1.reg.C[6].MAR = (uint32_t)&dmabuf;
+				DMA1.reg.C[6].PAR = (uint32_t)&TIM4.CCR3;
+				DMA1.reg.C[6].CR = (0 << 10) | (1 << 8) | (1 << 7) | (0 << 6) | (1 << 4) | (1 << 1) | (1 << 0);
 			}
 			
-			for(uint32_t i = 8; i-- > 0; n++) {
-				dmabuf[n] = r & (1 << i) ? 58 : 29;
+			void set_color(uint8_t r, uint8_t g, uint8_t b) {
+				uint32_t n = 0;
+				
+				for(uint32_t i = 8; i-- > 0; n++) {
+					dmabuf[n] = g & (1 << i) ? 58 : 29;
+				}
+				
+				for(uint32_t i = 8; i-- > 0; n++) {
+					dmabuf[n] = r & (1 << i) ? 58 : 29;
+				}
+				
+				for(uint32_t i = 8; i-- > 0; n++) {
+					dmabuf[n] = b & (1 << i) ? 58 : 29;
+				}
+				
+				dmabuf[n] = 0;
 			}
 			
-			for(uint32_t i = 8; i-- > 0; n++) {
-				dmabuf[n] = b & (1 << i) ? 58 : 29;
+		public:
+			void init() {
+				RCC.enable(RCC.TIM4);
+				RCC.enable(RCC.DMA1);
+				
+				Interrupt::enable(Interrupt::DMA1_Channel7);
+				
+				TIM4.ARR = (72000000 / 800000) - 1; // period = 90, 0 = 29, 1 = 58
+				TIM4.CCR3 = 0;
+				
+				TIM4.CCMR2 = (6 << 4) | (1 << 3);
+				TIM4.CCER = 1 << 8;
+				TIM4.DIER = 1 << 8;
+				
+				GPIOB[8].set_af(2);
+				GPIOB[8].set_mode(Pin::AF);
+				GPIOB[8].set_pull(Pin::PullNone);
+				
+				TIM4.CR1 = 1 << 0;
+				
+				Time::sleep(1);
+				
+				update(0, 0, 0);
 			}
 			
-			dmabuf[n] = 0;
-		}
-		
-	public:
-		void init() {
-			RCC.enable(RCC.TIM4);
-			RCC.enable(RCC.DMA1);
-			
-			Interrupt::enable(Interrupt::DMA1_Channel7);
-			
-			TIM4.ARR = (72000000 / 800000) - 1; // period = 90, 0 = 29, 1 = 58
-			TIM4.CCR3 = 0;
-			
-			TIM4.CCMR2 = (6 << 4) | (1 << 3);
-			TIM4.CCER = 1 << 8;
-			TIM4.DIER = 1 << 8;
-			
-			GPIOB[8].set_af(2);
-			GPIOB[8].set_mode(Pin::AF);
-			GPIOB[8].set_pull(Pin::PullNone);
-			
-			TIM4.CR1 = 1 << 0;
-			
-			Time::sleep(1);
-			
-			update(0, 0, 0);
-		}
-		
-		void update(uint8_t r, uint8_t g, uint8_t b) {
-			if(busy) { return; }
+			void update(uint8_t r, uint8_t g, uint8_t b) {
+				if(busy) { return; }
 
-			set_color(r, g, b);
-			
-			cnt = 15;
-			busy = true;
-			
-			schedule_dma();
-		}
-		
-		void irq() {
-			DMA1.reg.C[6].CR = 0;
-			DMA1.reg.IFCR = 1 << 24;
-			
-			if(cnt) {
+				set_color(r, g, b);
+				
+				cnt = 15;
+				busy = true;
+				
 				schedule_dma();
-			} else {
-				busy = false;
 			}
-		}
-};
+			
+			void irq() {
+				DMA1.reg.C[6].CR = 0;
+				DMA1.reg.IFCR = 1 << 24;
+				
+				if(cnt) {
+					schedule_dma();
+				} else {
+					busy = false;
+				}
+			}
+	};
 
-WS2812B ws2812b;
+	WS2812B ws2812b;
 
-template <>
-void interrupt<Interrupt::DMA1_Channel7>() {
-	ws2812b.irq();
-}
+	template <>
+	void interrupt<Interrupt::DMA1_Channel7>() {
+		ws2812b.irq();
+	}
+#endif
 
 uint32_t last_led_time;
 
@@ -205,8 +220,10 @@ class HID_arcin : public USB_HID {
 			last_led_time = Time::time();
 			button_leds.set(report->leds);
 			
+			#if B9_LIGHTING==1
 			ws2812b.update(report->r, report->b, report->g);
-			
+			#endif
+
 			return true;
 		}
 		
@@ -334,8 +351,10 @@ int main() {
 	//RCC.CFGR2 |= (0x19 << 4);
 
 	// Set ADC12PRES to /1.
-	RCC.CFGR2 |= (0x10 << 4);
-	
+	if(analog_mode) {
+		RCC.CFGR2 |= (0x10 << 4);
+	}
+
 	// Initialize system timer.
 	STK.LOAD = 72000000 / 8 / 1000; // 1000 Hz.
 	STK.CTRL = 0x03;
@@ -372,7 +391,7 @@ int main() {
 	
 	Axis* axis_1;
 	
-	if(1) {
+	if(analog_mode) {
 		RCC.enable(RCC.ADC12);
 		
 		axis_ana1.enable();
@@ -394,7 +413,7 @@ int main() {
 	
 	Axis* axis_2;
 	
-	if(1) {
+	if(analog_mode) {
 		RCC.enable(RCC.ADC12);
 		
 		axis_ana2.enable();
@@ -414,8 +433,10 @@ int main() {
 		axis_2 = &axis_qe2;
 	}
 	
+	#if B9_LIGHTING==1
 	ws2812b.init();
-	
+	#endif
+
 	uint8_t last_x = 0;
 	uint8_t last_y = 0;
 	
@@ -448,10 +469,10 @@ int main() {
 			int8_t rx = qe1_count - last_x;
 			int8_t ry = qe2_count - last_y;
 			
-			if(rx > 2) {
+			if(rx > smoothing_factor) {
 				state_x = 50;
 				last_x = qe1_count;
-			} else if(rx < -2) {
+			} else if(rx < -(smoothing_factor)) {
 				state_x = -50;
 				last_x = qe1_count;
 			} else if(state_x > 0) {
@@ -462,10 +483,10 @@ int main() {
 				last_x = qe1_count;
 			}
 			
-			if(ry > 2) {
+			if(ry > smoothing_factor) {
 				state_y = 50;
 				last_y = qe2_count;
-			} else if(ry < -2) {
+			} else if(ry < -(smoothing_factor)) {
 				state_y = -50;
 				last_y = qe2_count;
 			} else if(state_y > 0) {
@@ -477,11 +498,13 @@ int main() {
 			}
 			
 			/* SVRE9 smoothing hack: ignore deltas of 1-2 */
-			if(rx >= -2 && rx <= 2 && rx != 0) {
-				qe1_count -= rx;
-			}
-			if(ry >= -2 && ry <= 2 && ry != 0) {
-				qe2_count -= ry;
+			if(analog_mode) {
+				if(rx >= -(smoothing_factor) && rx <= smoothing_factor && rx != 0) {
+					qe1_count -= rx;
+				}
+				if(ry >= -(smoothing_factor) && ry <= smoothing_factor && ry != 0) {
+					qe2_count -= ry;
+				}
 			}
 
 			if(state_x > 0) {

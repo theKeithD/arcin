@@ -1,12 +1,33 @@
 #ifndef REPORT_DESC_H
 #define REPORT_DESC_H
 
+// TODO: move these defs into device config
+#ifndef KEYBOARD_MODE
+#define KEYBOARD_MODE 0
+#endif
+#ifndef B9_LIGHTING
+#define B9_LIGHTING 1
+#endif
+#ifndef ANALOG_MODE
+#define ANALOG_MODE 1
+#endif
+#ifndef SMOOTHING_FACTOR
+#define SMOOTHING_FACTOR 2
+#endif
+
 #include <usb/hid.h>
 
+#if KEYBOARD_MODE==1
 auto report_desc = keyboard(
+#else
+auto report_desc = gamepad(
+#endif
 	// Inputs.
 	report_id(1),
 	
+	#if KEYBOARD_MODE==1
+	# if B9_LIGHTING==1
+	// keyboard HID report with B9 skipped
 	usage_page(UsagePage::Keyboard),
 	usage(0x8b),          // B1  - FX-L  (muhen)
 	usage('d' - 'a' + 4), // B2  - BT-A  (D)
@@ -38,8 +59,34 @@ auto report_desc = keyboard(
 	input(0x02),
 	
 	padding_in(1 + 8 + 8), // 15 + 1 for buttons and remaining space, then 8 + 8 for X/Y (now unused)
-
-	/*
+	# else
+	// keyboard HID report with B9 included
+	usage_page(UsagePage::Keyboard),
+	usage(0x8b),          // B1  - FX-L  (muhen)
+	usage('d' - 'a' + 4), // B2  - BT-A  (D)
+	usage(0x8a),          // B3  - FX-R  (henkan)
+	usage('f' - 'a' + 4), // B4  - BT-B  (F)
+	usage('q' - 'a' + 4), // B5  - undef (Q) 
+	usage('j' - 'a' + 4), // B6  - BT-C  (J)
+	usage('w' - 'a' + 4), // B7  - undef (W)
+	usage('k' - 'a' + 4), // B8  - BT-D  (K)
+	usage('o' - 'a' + 4), // B9  - undef (O)
+	usage(0x28),          // B10 - Start (Enter)
+	usage('p' - 'a' + 4), // B11 - undef (P)
+	usage('s' - 'a' + 4), // B12 - VOL-L right (S)
+	usage('a' - 'a' + 4), // B13 - VOL-L left  (A)
+	usage(0x33),          // B14 - VOL-R right (;)
+	usage('l' - 'a' + 4), // B15 - VOL-R left  (L)
+	logical_minimum(0),
+	logical_maximum(1),
+	report_count(15),
+	report_size(1),
+	input(0x02),
+	
+	padding_in(1 + 8 + 8), // 15 + 1 for buttons and remaining space, then 8 + 8 for X/Y (now unused)
+  # endif
+  #else
+	// normal gamepad buttons
 	buttons(15),
 	padding_in(1),
 
@@ -58,8 +105,8 @@ auto report_desc = keyboard(
 	report_count(1),
 	report_size(8),
 	input(0x02),
-	*/
-	
+  #endif
+
 	// Outputs.
 	report_id(2),
 	logical_minimum(0),
